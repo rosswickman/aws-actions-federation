@@ -4,7 +4,7 @@ Description: Github Actions Federated Roles
 
 Parameters:
 
-  GithubOrganization:
+  GitHubOrganization:
     Type: String
     Description: This is the root organization where repos are stored
     Default: 'rosswickman'
@@ -17,24 +17,27 @@ Parameters:
   RoleName:
     Type: String
     Description: Unique identifier to deploy multiple role groups for different org/repo combinations
-    Default: "Github-Actions"
+    Default: "GitHub-Actions"
 
 ##Conditions:
 
 ## Assume Policy Condition Strings
-#vstoken.actions.githubusercontent.com:sub: !Sub repo:${GithubOrganization}/${RepoName}:*             ## Specific Repo
-#vstoken.actions.githubusercontent.com:sub: !Sub repo:${GithubOrganization}/*                         ## Any Branch / Any Repo
-#vstoken.actions.githubusercontent.com:sub: !Sub repo:${GithubOrganization}/*:ref:refs/heads/main     ## Specific Branch / Any Repo
+#vstoken.actions.githubusercontent.com:sub: !Sub repo:${GitHubOrganization}/${RepoName}:*             ## Specific Repo
+#vstoken.actions.githubusercontent.com:sub: !Sub repo:${GitHubOrganization}/*                         ## Any Branch / Any Repo
+#vstoken.actions.githubusercontent.com:sub: !Sub repo:${GitHubOrganization}/*:ref:refs/heads/main     ## Specific Branch / Any Repo
 
 Resources:
 
-  GithubProvider:
+  GitHubProvider:
     Type: AWS::IAM::OIDCProvider
     Properties:
       Url: https://vstoken.actions.githubusercontent.com
       ThumbprintList: [a031c46782e6e6c662c2c87c76da9aa62ccabd8e]
+      Tags:
+      - Key: "Name"
+        Value: !Sub ${RoleName}-Provider
       ClientIdList:
-        - !Sub https://github.com/${GithubOrganization}/${RepoName}
+        - !Sub https://github.com/${GitHubOrganization}/${RepoName}
 
   AdminRole:
     Type: AWS::IAM::Role
@@ -46,10 +49,10 @@ Resources:
           - Effect: Allow
             Action: sts:AssumeRoleWithWebIdentity
             Principal:
-              Federated: !Ref GithubProvider
+              Federated: !Ref GitHubProvider
             Condition:
               StringLike:
-                vstoken.actions.githubusercontent.com:sub: !Sub repo:${GithubOrganization}/${RepoName}:*
+                vstoken.actions.githubusercontent.com:sub: !Sub repo:${GitHubOrganization}/${RepoName}:*
 
   ReadOnlyRole:
     Type: AWS::IAM::Role
@@ -61,10 +64,10 @@ Resources:
           - Effect: Allow
             Action: sts:AssumeRoleWithWebIdentity
             Principal:
-              Federated: !Ref GithubProvider
+              Federated: !Ref GitHubProvider
             Condition:
               StringLike:
-                vstoken.actions.githubusercontent.com:sub: !Sub repo:${GithubOrganization}/${RepoName}:*
+                vstoken.actions.githubusercontent.com:sub: !Sub repo:${GitHubOrganization}/${RepoName}:*
 
   DeliverRole:
     Type: AWS::IAM::Role
@@ -76,10 +79,10 @@ Resources:
           - Effect: Allow
             Action: sts:AssumeRoleWithWebIdentity
             Principal:
-              Federated: !Ref GithubProvider
+              Federated: !Ref GitHubProvider
             Condition:
               StringLike:
-                vstoken.actions.githubusercontent.com:sub: !Sub repo:${GithubOrganization}/${RepoName}:*
+                vstoken.actions.githubusercontent.com:sub: !Sub repo:${GitHubOrganization}/${RepoName}:*
       Policies:
         -
           PolicyName: S3-Allow
@@ -106,10 +109,10 @@ Resources:
           - Effect: Allow
             Action: sts:AssumeRoleWithWebIdentity
             Principal:
-              Federated: !Ref GithubProvider
+              Federated: !Ref GitHubProvider
             Condition:
               StringLike:
-                vstoken.actions.githubusercontent.com:sub: !Sub repo:${GithubOrganization}/${RepoName}:*
+                vstoken.actions.githubusercontent.com:sub: !Sub repo:${GitHubOrganization}/${RepoName}:*
       Policies:
         -
           PolicyName: S3-Allow

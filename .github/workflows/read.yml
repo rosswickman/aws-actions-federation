@@ -10,19 +10,32 @@ env:
   AWS_ROLE_ARN: ${{ secrets.READ_ROLE_ARN }}
 
 jobs:
-  build:
+  Read:
+    name: Read Environment
     runs-on: ubuntu-latest
     permissions:
       id-token: write
       contents: read
     steps:
-      - run: sleep 5 # there's still a race condition for now
+      # - name: Sleep
+      #   run: sleep 5 ## Prevent race condition
 
-      - name: Configure AWS
+      # - name: Configure AWS Credentials
+      #   uses: aws-actions/configure-aws-credentials@v1
+      #   with:
+      #     aws-region: ${{ env.AWS_DEFAULT_REGION}}
+      #     role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+      #     role-duration-seconds: 1200
+      #     role-session-name: GitHubActions
+      #     aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+      #     aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+      #     role-external-id: ${{ secrets.AWS_ROLE_EXTERNAL_ID }}
+
+      - name: Configure AWS Credentials
         run: |
           export AWS_WEB_IDENTITY_TOKEN_FILE=/tmp/awscreds
-          export AWS_ROLE_ARN=${{ env.AWS_ROLE_ARN }}
           export AWS_DEFAULT_REGION=${{ env.AWS_DEFAULT_REGION}}
+          export AWS_ROLE_ARN=${{ env.AWS_ROLE_ARN }}
 
           echo AWS_WEB_IDENTITY_TOKEN_FILE=$AWS_WEB_IDENTITY_TOKEN_FILE >> $GITHUB_ENV
           echo AWS_ROLE_ARN=$AWS_ROLE_ARN >> $GITHUB_ENV
