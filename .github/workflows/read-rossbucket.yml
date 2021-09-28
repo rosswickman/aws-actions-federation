@@ -1,6 +1,10 @@
 name: Test Manual Switch
 
-on: [workflow_dispatch]
+#on: [workflow_dispatch]
+on:
+  push:
+    # branches:
+    #   - dev
 
 env:
   AWS_DEFAULT_REGION: us-east-1
