@@ -17,9 +17,6 @@ jobs:
       id-token: write
       contents: read
     steps:
-      # - name: Sleep (5) - Race Condition
-      #   run: sleep 5
-
       - name: Configure AWS Credentials
         run: |
           export AWS_WEB_IDENTITY_TOKEN_FILE=/tmp/awscreds
