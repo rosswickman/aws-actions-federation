@@ -17,8 +17,8 @@ jobs:
       id-token: write
       contents: read
     steps:
-      # - name: Sleep
-      #   run: sleep 5 ## Prevent race condition
+      - name: Sleep
+        run: sleep 5 ## Prevent race condition
 
       # - name: Configure AWS Credentials
       #   uses: aws-actions/configure-aws-credentials@v1
