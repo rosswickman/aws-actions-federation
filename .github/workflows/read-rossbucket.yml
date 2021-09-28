@@ -1,4 +1,4 @@
-name: Read Environment Workflow
+name: Test Manual Switch
 
 on: [workflow_dispatch]
 
