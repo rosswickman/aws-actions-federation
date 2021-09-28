@@ -13,7 +13,7 @@ env:
 jobs:
   Read-Ross-Bucket:
     if: github.ref == 'refs/heads/initial'
-    name: TEST MANUAL
+    name: Read-Ross-Bucket
     runs-on: ubuntu-latest
     permissions:
       id-token: write
@@ -43,7 +43,7 @@ jobs:
 
   Read-CFN-Bucket:
     if: github.ref != 'refs/heads/initial'
-    name: TEST MANUAL
+    name: Read-CFN-Bucket
     runs-on: ubuntu-latest
     permissions:
       id-token: write
