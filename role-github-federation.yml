@@ -1,0 +1,151 @@
+---
+AWSTemplateFormatVersion: "2010-09-09"
+Description: Github Actions Federated Roles
+
+Parameters:
+
+  GitHubOrganization:
+    Type: String
+    Description: This is the root organization where repos are stored
+    Default: 'rosswickman'
+
+  RepoName:
+    Type: String
+    Description: The repo(s) these roles will have access to
+    Default: 'aws-actions-federation'
+
+  RoleName:
+    Type: String
+    Description: Unique identifier to deploy multiple role groups for different org/repo combinations
+    Default: "GitHub-Actions"
+
+##Conditions:
+
+## Assume Policy Condition Strings
+#vstoken.actions.githubusercontent.com:sub: !Sub repo:${GitHubOrganization}/${RepoName}:*             ## Specific Repo
+#vstoken.actions.githubusercontent.com:sub: !Sub repo:${GitHubOrganization}/*                         ## Any Branch / Any Repo
+#vstoken.actions.githubusercontent.com:sub: !Sub repo:${GitHubOrganization}/*:ref:refs/heads/main     ## Specific Branch / Any Repo
+
+Resources:
+
+  GitHubProvider:
+    Type: AWS::IAM::OIDCProvider
+    Properties:
+      Url: https://vstoken.actions.githubusercontent.com
+      ThumbprintList: [a031c46782e6e6c662c2c87c76da9aa62ccabd8e]
+      Tags:
+      - Key: "Name"
+        Value: !Sub ${RoleName}-Provider
+      ClientIdList:
+        - !Sub https://github.com/${GitHubOrganization}/${RepoName}
+
+  AdminRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub ${RoleName}-Administrator
+      ManagedPolicyArns: [arn:aws:iam::aws:policy/AdministratorAccess]
+      AssumeRolePolicyDocument:
+        Statement:
+          - Effect: Allow
+            Action: sts:AssumeRoleWithWebIdentity
+            Principal:
+              Federated: !Ref GitHubProvider
+            Condition:
+              StringLike:
+                vstoken.actions.githubusercontent.com:sub: !Sub repo:${GitHubOrganization}/${RepoName}:*
+
+  ReadOnlyRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub ${RoleName}-ReadOnly
+      ManagedPolicyArns: [arn:aws:iam::aws:policy/ReadOnlyAccess]
+      AssumeRolePolicyDocument:
+        Statement:
+          - Effect: Allow
+            Action: sts:AssumeRoleWithWebIdentity
+            Principal:
+              Federated: !Ref GitHubProvider
+            Condition:
+              StringLike:
+                vstoken.actions.githubusercontent.com:sub: !Sub repo:${GitHubOrganization}/${RepoName}:*
+
+  DeliverRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub ${RoleName}-Deliver
+      ManagedPolicyArns: [arn:aws:iam::aws:policy/ReadOnlyAccess]
+      AssumeRolePolicyDocument:
+        Statement:
+          - Effect: Allow
+            Action: sts:AssumeRoleWithWebIdentity
+            Principal:
+              Federated: !Ref GitHubProvider
+            Condition:
+              StringLike:
+                vstoken.actions.githubusercontent.com:sub: !Sub repo:${GitHubOrganization}/${RepoName}:*
+      Policies:
+        -
+          PolicyName: S3-Allow
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Sid: S3Actions
+                Effect: Allow
+                Action:
+                  - s3:ListBucket
+                  - s3:GetObject
+                  - s3:PutObject
+                Resource:
+                  - 'arn:aws:s3:::*'
+                  - 'arn:aws:s3:::*/*'
+
+  DeployRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub ${RoleName}-Deploy
+      ManagedPolicyArns: [arn:aws:iam::aws:policy/ReadOnlyAccess]
+      AssumeRolePolicyDocument:
+        Statement:
+          - Effect: Allow
+            Action: sts:AssumeRoleWithWebIdentity
+            Principal:
+              Federated: !Ref GitHubProvider
+            Condition:
+              StringLike:
+                vstoken.actions.githubusercontent.com:sub: !Sub repo:${GitHubOrganization}/${RepoName}:*
+      Policies:
+        -
+          PolicyName: S3-Allow
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Sid: S3Actions
+                Effect: Allow
+                Action:
+                  - s3:ListBucket
+                  - s3:GetObject
+                Resource:
+                  - 'arn:aws:s3:::*'
+                  - 'arn:aws:s3:::*/*'
+        -
+          PolicyName: CFN-Allow
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+            - Sid: CFNAllowActions
+              Effect: Allow
+              Action:
+              - cloudformation:*
+              Resource:
+                - !Sub "arn:aws:cloudformation:${AWS::Region}:${AWS::AccountId}:*/*/*"
+
+Outputs:
+
+  AdminRole:
+    Value: !GetAtt AdminRole.Arn
+  ReadOnlyRole:
+    Value: !GetAtt ReadOnlyRole.Arn
+  DeliverRole:
+    Value: !GetAtt DeliverRole.Arn
+  DeployRole:
+    Value: !GetAtt DeployRole.Arn
