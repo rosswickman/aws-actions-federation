@@ -4,53 +4,27 @@ Description: Github Actions Federated Roles
 
 Parameters:
 
-  RoleName:
-    Type: String
-    Description: Unique identifier to deploy multiple role groups for different org/repo combinations
-    MinLength: 1
-    Default: "GitHub-Actions"
-
   GitHubOrganization:
     Type: String
     Description: This is the root organization where repos are stored
-    MinLength: 1
     Default: 'rosswickman'
-
-  RepoPolicy:
-    Type: String
-    Description: Determines which repositories can leverage deployed roles
-    Default: 'Whole Organization / User'
-    AllowedValues:
-      - "Whole Organization / User"
-      - "Single Project"
-      - "Branch(es) - All"
-      - "Branch(es) - Project"
 
   RepoName:
     Type: String
     Description: The repo(s) these roles will have access to
+    Default: 'aws-actions-federation'
 
-  BranchName:
+  RoleName:
     Type: String
-    Description: The branch(es) on repos allowed to use deployed roles
+    Description: Unique identifier to deploy multiple role groups for different org/repo combinations
+    Default: "GitHub-Actions"
 
-Conditions:
+##Conditions:
 
-  ## Any Branch / Any Repo
-  # vstoken.actions.githubusercontent.com:sub: !Sub repo:${GitHubOrganization}/*
-  cOrgUser: !Equals [ "Whole Organization / User", !Ref RepoPolicy ]
-
-  ## Specific Repo
-  # vstoken.actions.githubusercontent.com:sub: !Sub repo:${GitHubOrganization}/${RepoName}:*
-  cRepo: !Equals [ "Single Repo", !Ref RepoPolicy ]
-
-  ## Specific Branch / Any Repo
-  # vstoken.actions.githubusercontent.com:sub: !Sub repo:${GitHubOrganization}/${RepoName}:ref:refs/heads/main
-  cBranchAll: !Equals [ "Branch(es) - All", !Ref RepoPolicy ]
-
-  ## Specific Branch / Specific Repo
-  # vstoken.actions.githubusercontent.com:sub: !Sub repo:${GitHubOrganization}/*:ref:refs/heads/main
-  cBranchRepo: !Equals [ "Branch(es) - Repo", !Ref RepoPolicy ]
+## Assume Policy Condition Strings
+#vstoken.actions.githubusercontent.com:sub: !Sub repo:${GitHubOrganization}/${RepoName}:*             ## Specific Repo
+#vstoken.actions.githubusercontent.com:sub: !Sub repo:${GitHubOrganization}/*                         ## Any Branch / Any Repo
+#vstoken.actions.githubusercontent.com:sub: !Sub repo:${GitHubOrganization}/*:ref:refs/heads/main     ## Specific Branch / Any Repo
 
 Resources:
 
@@ -63,8 +37,7 @@ Resources:
       - Key: "Name"
         Value: !Sub ${RoleName}-Provider
       ClientIdList:
-        - !If [ cOrgUser, !Sub "https://github.com/${GitHubOrganization}/*", !Ref "AWS::NoValue" ]
-        - !If [ cRepo, !Sub "https://github.com/${GitHubOrganization}/${RepoName}", !Ref "AWS::NoValue" ]
+        - !Sub https://github.com/${GitHubOrganization}/${RepoName}
 
   ReadOnlyRole:
     Type: AWS::IAM::Role
@@ -79,8 +52,7 @@ Resources:
               Federated: !Ref GitHubProvider
             Condition:
               StringLike:
-                - !If [ cOrgUser, !Sub "vstoken.actions.githubusercontent.com:sub: repo:${GitHubOrganization}/*:*", !Ref "AWS::NoValue" ]
-                - !If [ cRepo, !Sub "vstoken.actions.githubusercontent.com:sub: repo:${GitHubOrganization}/${RepoName}:*", !Ref "AWS::NoValue" ]
+                vstoken.actions.githubusercontent.com:sub: !Sub repo:${GitHubOrganization}/${RepoName}:*
 
   DeliverRole:
     Type: AWS::IAM::Role
@@ -95,8 +67,7 @@ Resources:
               Federated: !Ref GitHubProvider
             Condition:
               StringLike:
-                - !If [ cOrgUser, !Sub "vstoken.actions.githubusercontent.com:sub: repo:${GitHubOrganization}/*:*", !Ref "AWS::NoValue" ]
-                - !If [ cRepo, !Sub "vstoken.actions.githubusercontent.com:sub: repo:${GitHubOrganization}/${RepoName}:*", !Ref "AWS::NoValue" ]
+                vstoken.actions.githubusercontent.com:sub: !Sub repo:${GitHubOrganization}/${RepoName}:*
       Policies:
         -
           PolicyName: S3-Allow
@@ -126,8 +97,7 @@ Resources:
               Federated: !Ref GitHubProvider
             Condition:
               StringLike:
-                - !If [ cOrgUser, !Sub "vstoken.actions.githubusercontent.com:sub: repo:${GitHubOrganization}/*:*", !Ref "AWS::NoValue" ]
-                - !If [ cRepo, !Sub "vstoken.actions.githubusercontent.com:sub: repo:${GitHubOrganization}/${RepoName}:*", !Ref "AWS::NoValue" ]
+                vstoken.actions.githubusercontent.com:sub: !Sub repo:${GitHubOrganization}/${RepoName}:*
       Policies:
         -
           PolicyName: S3-Allow
