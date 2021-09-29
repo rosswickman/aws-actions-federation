@@ -18,7 +18,7 @@ jobs:
       - name: Configure AWS Credentials
         run: |
           export AWS_WEB_IDENTITY_TOKEN_FILE=/tmp/awscreds
-          export AWS_DEFAULT_REGION=${{ env.AWS_DEFAULT_REGION}}
+          export AWS_DEFAULT_REGION=${{ env.AWS_DEFAULT_REGION }}
           export AWS_ROLE_ARN=${{ env.AWS_ROLE_ARN }}
 
           echo AWS_WEB_IDENTITY_TOKEN_FILE=$AWS_WEB_IDENTITY_TOKEN_FILE >> $GITHUB_ENV
