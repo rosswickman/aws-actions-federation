@@ -39,21 +39,6 @@ Resources:
       ClientIdList:
         - !Sub https://github.com/${GitHubOrganization}/${RepoName}
 
-  AdminRole:
-    Type: AWS::IAM::Role
-    Properties:
-      RoleName: !Sub ${RoleName}-Administrator
-      ManagedPolicyArns: [arn:aws:iam::aws:policy/AdministratorAccess]
-      AssumeRolePolicyDocument:
-        Statement:
-          - Effect: Allow
-            Action: sts:AssumeRoleWithWebIdentity
-            Principal:
-              Federated: !Ref GitHubProvider
-            Condition:
-              StringLike:
-                vstoken.actions.githubusercontent.com:sub: !Sub repo:${GitHubOrganization}/${RepoName}:*
-
   ReadOnlyRole:
     Type: AWS::IAM::Role
     Properties:
@@ -141,8 +126,6 @@ Resources:
 
 Outputs:
 
-  AdminRole:
-    Value: !GetAtt AdminRole.Arn
   ReadOnlyRole:
     Value: !GetAtt ReadOnlyRole.Arn
   DeliverRole:

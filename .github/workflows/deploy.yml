@@ -1,17 +1,26 @@
-name: Read Environment Workflow
+---
+name: "Deploy Resources"
+
+# Trigger when commits are pushed to the master branch
 
 on:
   push:
-    # branches:
-    #   - dev
+    branches:
+      - master
 
 env:
+
   AWS_DEFAULT_REGION: us-east-1
-  AWS_ROLE_ARN: ${{ secrets.READ_ROLE_ARN }}
+  AWS_DEFAULT_OUTPUT: json
+  AWS_CFN_BUCKET: <<some delivery bucket>>
+  AWS_BUCKET_PREFIX: <<bucket prefix>>
+  AWS_DEFAULT_REGION: us-east-1
+  AWS_ROLE_ARN: ${{ secrets.DEPLOY_ROLE_ARN }}
+  CFN_DIR: cloudformation
 
 jobs:
-  Read:
-    name: Read Environment
+  Deploy:
+    name: Deploy Resources
     runs-on: ubuntu-latest
     permissions:
       id-token: write
@@ -29,6 +38,9 @@ jobs:
 
           curl -H "Authorization: bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" "$ACTIONS_ID_TOKEN_REQUEST_URL" | jq -r '.value' > $AWS_WEB_IDENTITY_TOKEN_FILE
 
-      - name: List Buckets
-        run: |
-          aws s3 ls
+      - name: Deploy/Update Stack
+        uses: aws-actions/aws-cloudformation-github-deploy@v1.0.3
+        with:
+          name: bucket-effectual-mcm
+          template: cloudformation/<<SomeTemplateInDir>>.yml
+          no-fail-on-empty-changeset: "1"
