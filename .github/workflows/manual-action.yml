@@ -40,7 +40,7 @@ jobs:
         id: step_two
         run: |
             echo "URL: ${{ env.URL }}"
-            echo "TOKEN: ${{ env.URL }}"
+            echo "TOKEN: ${{ env.TOKEN }}"
 
       - name: Read CFN Bucket
         run: |
