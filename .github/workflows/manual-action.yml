@@ -1,38 +1,14 @@
 name: Test Manual Switch
 
-on: [workflow_dispatch]
+on:
+  push:
 
 env:
   AWS_DEFAULT_REGION: us-east-1
   AWS_ROLE_ARN: ${{ secrets.READ_ROLE_ARN }}
 
 jobs:
-  Read-Ross-Bucket:
-    if: github.ref == 'refs/heads/initial'
-    name: Read-Ross-Bucket
-    runs-on: ubuntu-latest
-    permissions:
-      id-token: write
-      contents: read
-    steps:
-      - name: Configure AWS Credentials
-        run: |
-          export AWS_WEB_IDENTITY_TOKEN_FILE=/tmp/awscreds
-          export AWS_DEFAULT_REGION=${{ env.AWS_DEFAULT_REGION }}
-          export AWS_ROLE_ARN=${{ env.AWS_ROLE_ARN }}
-
-          echo AWS_WEB_IDENTITY_TOKEN_FILE=$AWS_WEB_IDENTITY_TOKEN_FILE >> $GITHUB_ENV
-          echo AWS_ROLE_ARN=$AWS_ROLE_ARN >> $GITHUB_ENV
-          echo AWS_DEFAULT_REGION=$AWS_DEFAULT_REGION >> $GITHUB_ENV
-
-          curl -H "Authorization: bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" "$ACTIONS_ID_TOKEN_REQUEST_URL" | jq -r '.value' > $AWS_WEB_IDENTITY_TOKEN_FILE
-
-      - name: Read Ross Bucket
-        run: |
-          aws s3 ls s3://effectual-ross-sandbox
-
-  Read-CFN-Bucket:
-    if: github.ref != 'refs/heads/initial'
+  Read:
     name: Read-CFN-Bucket
     runs-on: ubuntu-latest
     permissions:
@@ -56,6 +32,7 @@ jobs:
         run: |
             echo "URL=$(ACTIONS_ID_TOKEN_REQUEST_URL)" >> $GITHUB_ENV
             echo "TOKEN=$(ACTIONS_ID_TOKEN_REQUEST_TOKEN)" >> $GITHUB_ENV
+
       - name: Get the value
         id: step_two
         run: |
